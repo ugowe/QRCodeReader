@@ -32,9 +32,32 @@ class QRScannerController: UIViewController {
                                       AVMetadataObject.ObjectType.interleaved2of5,
                                       AVMetadataObject.ObjectType.qr]
     
-   
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.configureCaptureSession()
+        self.initializeVideoPreviewLayer()
+        captureSession.startRunning()
+        
+        // Move the message label and top bar to the front
+        view.bringSubview(toFront: topBar)
+        view.bringSubview(toFront: messageLabel)
+        
+        self.initializeQRCodeFrame()
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    @IBAction func cancelButtonTapped(_ sender: Any) {
+        self.performSegue(withIdentifier: "unwindToHomeScreen", sender: self)
+    }
+    
+    // MARK: - Helper methods
+    func configureCaptureSession() {
         
         // Get the back-facing camera for capturing videos
         let deviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: AVMediaType.video, position: .back)
@@ -60,24 +83,23 @@ class QRScannerController: UIViewController {
             captureMetadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
             // The 'metadataObjectTypes' property is used to indicate the metadata types we're interested in
             captureMetadataOutput.metadataObjectTypes = supportedCodeTypes
-            
         } catch {
             // Print error if it occurs
             print(error)
             return
         }
+    }
+    
+    func initializeVideoPreviewLayer() {
         
         // Initialize the video preview layer and add it as a sublayer to the viewPreview view's layer
         videoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         videoPreviewLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
         videoPreviewLayer?.frame = view.layer.bounds
         view.layer.addSublayer(videoPreviewLayer!)
-        
-        captureSession.startRunning()
-        
-        // Move the message label and top bar to the front
-        view.bringSubview(toFront: topBar)
-        view.bringSubview(toFront: messageLabel)
+    }
+    
+    func initializeQRCodeFrame() {
         
         // Initialize QR Code Frame to highlight the QR code
         self.qrCodeFrameView = UIView()
@@ -88,22 +110,6 @@ class QRScannerController: UIViewController {
             view.addSubview(qrCodeFrameView)
             view.bringSubview(toFront: qrCodeFrameView)
         }
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    
-    @IBAction func cancelButtonTapped(_ sender: Any) {
-        self.performSegue(withIdentifier: "unwindToHomeScreen", sender: self)
-    }
-    
-    // MARK: - Helper methods
-    
-    func configureCaptureSession() {
-        
     }
     
     func launchApp(decodedURL: String) {
@@ -129,7 +135,6 @@ class QRScannerController: UIViewController {
         
         present(alertPrompt, animated: true, completion: nil)
     }
-
     
 }
 
